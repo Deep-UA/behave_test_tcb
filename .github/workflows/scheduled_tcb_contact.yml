@@ -1,0 +1,52 @@
+name: Scheduled TCB contact check
+
+on:
+  schedule:
+    # 16:00 Warsaw on working days. Actions cron is UTC-only and knows nothing
+    # about DST: 16:00 Warsaw = 15:00 UTC in winter (CET) / 14:00 UTC in
+    # summer (CEST). Trigger on both and let check-time decide which one is
+    # really 16:00 in Warsaw.
+    - cron: '0 14 * * 1-5'
+    - cron: '0 15 * * 1-5'
+  workflow_dispatch:  # manual run button, skips the time check
+
+jobs:
+  check-time:
+    runs-on: ubuntu-latest
+    outputs:
+      is-16-warsaw: ${{ steps.tz.outputs.result }}
+    steps:
+      - id: tz
+        run: |
+          hour=$(TZ=Europe/Warsaw date +%H)
+          echo "Warsaw hour is $hour"
+          echo "result=$([ "$hour" = "16" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: check-time
+    if: needs.check-time.outputs.is-16-warsaw == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Install Playwright browser
+      run: playwright install --with-deps chromium
+    - name: Test with behave
+      env:
+        GITHUB_RUN: 'True'
+        BROWSER: chromium
+      run: behave features/tcb_contact.feature
+    - name: Upload traces on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-traces-scheduled
+        path: traces/
+        if-no-files-found: ignore
