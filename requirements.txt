@@ -5,5 +5,4 @@ pluggy
 py
 pylint-fail-under
 PyYaml
-selenium
-webdriver-manager
+playwright

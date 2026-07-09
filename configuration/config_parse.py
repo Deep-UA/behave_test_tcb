@@ -10,6 +10,7 @@ with open(f'{os.path.dirname(os.path.abspath(__file__))}/configs.yaml') as CONFI
     ENV_CONFIGS = CONFIGS['environments'][os.getenv('ENVIRONMENT', 'dev')]
     URLS = CONFIGS['urls']
     GENERAL = CONFIGS['general']
+    BROWSER_SETTINGS = CONFIGS['browser_settings']
 
 
     def get_value(key: str, key_type: str, *args):
@@ -32,8 +33,15 @@ with open(f'{os.path.dirname(os.path.abspath(__file__))}/configs.yaml') as CONFI
     BUG = get_value('bug', GENERAL)
     GITHUB = get_value('git_path', GENERAL)
 
-    TIMEOUT_SEC = get_value('timeout_sec', CONFIGS)
-    IMPLICIT_SEC = get_value('implicit_sec', CONFIGS)
+    TIMEOUT_SEC = int(get_value('timeout_sec', CONFIGS))
+
+    # Browser settings (each can be overridden by env var, e.g. BROWSER=firefox)
+    BROWSER = str(get_value('browser', BROWSER_SETTINGS)).lower()
+    HEADLESS = str(get_value('headless', BROWSER_SETTINGS)).lower() == 'true'
+    VIEWPORT_WIDTH = int(get_value('viewport_width', BROWSER_SETTINGS))
+    VIEWPORT_HEIGHT = int(get_value('viewport_height', BROWSER_SETTINGS))
+    NAVIGATION_TIMEOUT_SEC = int(get_value('navigation_timeout_sec', BROWSER_SETTINGS))
+    MOBILE_DEVICE = get_value('mobile_device', BROWSER_SETTINGS)
 
 OS_NAME = platform.system()
 OS_VERSION = platform.version()

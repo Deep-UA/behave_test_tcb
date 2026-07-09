@@ -3,30 +3,36 @@ name: Python package
 on: [push]
 
 jobs:
-  build:
-
+  test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        python-version: [3.8]
-
+        browser: [chromium, firefox, webkit]
     steps:
-    - name: Start Selenoid Server
-      uses: Xotabu4/selenoid-github-action@v1
-    - uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: '3.11'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install -r requirements.txt
+    - name: Install Playwright browser
+      run: playwright install --with-deps ${{ matrix.browser }}
     - name: Test with behave
       env:
         TOKEN: ${{ secrets.TOKEN }}
-        SELENIUM_HUB_HOST: 'http://localhost:4444/wd/hub'
-        GITHUB_RUN: True
+        GITHUB_RUN: 'True'
+        BROWSER: ${{ matrix.browser }}
       run: |
-        behave
+        # tcb_login_by_phone.feature is excluded: it needs manual SMS-code entry
+        behave features/tcb_contact.feature features/tcb_login_modal_check.feature
+    - name: Upload traces on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-traces-${{ matrix.browser }}
+        path: traces/
+        if-no-files-found: ignore

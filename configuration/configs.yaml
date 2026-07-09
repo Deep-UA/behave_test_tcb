@@ -4,11 +4,19 @@ environments: {
 }
 
 urls: {
-  main_ui_url: 'http://automationpractice.com/index.php'
+  main_ui_url: 'https://tcb.com.ua'
 }
 
 timeout_sec: 15
-implicit_sec: 1
+
+browser_settings: {
+  browser: 'chrome',           # chrome | chromium | firefox | safari | webkit
+  headless: false,
+  viewport_width: 1920,
+  viewport_height: 1080,
+  navigation_timeout_sec: 30,
+  mobile_device: 'iPhone 14'   # used by scenarios tagged @mobile
+}
 
 general: {
   project: 'UI_tests',

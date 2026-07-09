@@ -1,65 +1,70 @@
 import os
-import platform
 
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.firefox import GeckoDriverManager
-from webdriver_manager.microsoft import IEDriverManager
+from playwright.sync_api import Page, sync_playwright
 
-from configuration.config_parse import IMPLICIT_SEC
+from configuration.config_parse import (
+    BROWSER,
+    HEADLESS,
+    MOBILE_DEVICE,
+    NAVIGATION_TIMEOUT_SEC,
+    TIMEOUT_SEC,
+    VIEWPORT_HEIGHT,
+    VIEWPORT_WIDTH,
+)
+
+# Selenium-era browser names mapped to Playwright engines, so the existing
+# `BROWSER` values keep working
+_BROWSER_ENGINES = {
+    'chrome': 'chromium',
+    'chromium': 'chromium',
+    'firefox': 'firefox',
+    'safari': 'webkit',
+    'webkit': 'webkit',
+}
 
 
 class Driver:
-    @staticmethod
-    def get_chrome_options():
-        options = Options()
-        options.add_argument('--headless')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_experimental_option('w3c', False)
-        options.add_argument('--no-sandbox')
-        return options
+    """One browser per run, one isolated context+page per scenario."""
 
-    def get_driver(self):
-        driver = None
-        browser = os.getenv('browser', 'chrome')
-        if os.getenv('GITHUB_RUN'):
-            options = self.get_chrome_options()
-            capabilities = {'browserName': browser, 'sessionTimeout': '5m'}
-            capabilities.update(options.to_capabilities())
-            driver = webdriver.Remote(command_executor=os.getenv('SELENIUM_HUB_HOST'),
-                                      desired_capabilities=capabilities)
-            return self.add_driver_settings(driver)
-        if browser == 'chrome':
-            options = Options()
-            if os.getenv('HEADLESS', 'false').lower() == 'true' or os.getenv('DOCKER_RUN'):
-                options = self.get_chrome_options()
-            driver = webdriver.Chrome(ChromeDriverManager().install(), options=options,
-                                      desired_capabilities={'goog:loggingPrefs': {'performance': 'ALL'}})
+    def __init__(self):
+        self.playwright = None
+        self.browser = None
+        self.context = None
+        self.page = None
 
-        elif browser == 'firefox':
-            operation_system = platform.system()
-            arch = platform.architecture()
-            if operation_system in ('Darwin', 'Linux'):
-                driver = webdriver.Firefox(executable_path=GeckoDriverManager().install())
-            else:
-                if arch[0] == '32bit':
-                    driver = webdriver.Firefox(executable_path=GeckoDriverManager(os_type='win32').install())
-                elif arch[0] == '64bit':
-                    driver = webdriver.Firefox(executable_path=GeckoDriverManager(os_type='win64').install())
-        elif browser == 'safari':
-            driver = webdriver.Safari(executable_path='/usr/bin/safaridriver')
-        elif browser == 'ie':
-            arch = platform.architecture()
-            if arch[0] == '32bit':
-                driver = webdriver.Ie(executable_path=IEDriverManager(os_type='Win32').install())
-            elif arch[0] == '64bit':
-                driver = webdriver.Ie(executable_path=IEDriverManager(os_type='x64').install())
-        return self.add_driver_settings(driver)
+    def start_browser(self):
+        engine = _BROWSER_ENGINES.get(BROWSER, 'chromium')
+        # CI has no display, so it always runs headless
+        headless = HEADLESS or bool(os.getenv('DOCKER_RUN')) or bool(os.getenv('GITHUB_RUN'))
+        launch_args = ['--no-sandbox', '--disable-dev-shm-usage'] if engine == 'chromium' and headless else []
+        self.playwright = sync_playwright().start()
+        self.browser = getattr(self.playwright, engine).launch(headless=headless, args=launch_args)
+        return self.browser
 
-    @staticmethod
-    def add_driver_settings(driver):
-        driver.implicitly_wait(IMPLICIT_SEC)
-        driver.set_page_load_timeout(30)
-        driver.maximize_window()
-        return driver
+    def new_page(self, mobile: bool = False) -> Page:
+        """Fresh incognito-like context per scenario: clean cookies and storage"""
+        if mobile:
+            self.context = self.browser.new_context(**self.playwright.devices[MOBILE_DEVICE])
+        else:
+            self.context = self.browser.new_context(
+                viewport={'width': VIEWPORT_WIDTH, 'height': VIEWPORT_HEIGHT}
+            )
+        self.context.tracing.start(screenshots=True, snapshots=True, sources=True)
+        self.page = self.context.new_page()
+        self.page.set_default_timeout(TIMEOUT_SEC * 1000)
+        self.page.set_default_navigation_timeout(NAVIGATION_TIMEOUT_SEC * 1000)
+        return self.page
+
+    def close_page(self, trace_path: str = None):
+        """Close the scenario context; pass trace_path to save the trace (on failure)"""
+        if self.context:
+            self.context.tracing.stop(path=trace_path)
+            self.context.close()
+            self.context = None
+            self.page = None
+
+    def stop(self):
+        if self.browser:
+            self.browser.close()
+        if self.playwright:
+            self.playwright.stop()

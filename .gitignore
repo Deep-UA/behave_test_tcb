@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.venv/
+.idea/
+.pytest_cache/
+allure-results/
+traces/
+.playwright-mcp/
