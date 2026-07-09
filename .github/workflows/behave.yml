@@ -23,7 +23,6 @@ jobs:
       run: playwright install --with-deps ${{ matrix.browser }}
     - name: Test with behave
       env:
-        TOKEN: ${{ secrets.TOKEN }}
         GITHUB_RUN: 'True'
         BROWSER: ${{ matrix.browser }}
       run: |

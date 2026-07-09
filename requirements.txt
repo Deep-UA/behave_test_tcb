@@ -3,6 +3,6 @@ allure-behave
 configparser
 pluggy
 py
-pylint-fail-under
+pylint
 PyYaml
 playwright

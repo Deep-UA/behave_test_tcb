@@ -1,7 +1,10 @@
+# behave creates given/when/then decorators dynamically, so pylint's
+# static analysis flags them as not-callable — a known false positive
+# pylint: disable=not-callable
 import os
 import time
 
-from behave import *
+from behave import given, then, when
 
 from page_objects.tcb.tcb_object import TcbPage
 

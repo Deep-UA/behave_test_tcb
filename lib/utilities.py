@@ -28,7 +28,7 @@ class Utilities:
             if html:
                 allure.attach(html, name='html_source', attachment_type=allure.attachment_type.HTML)
             # Console messages are collected by BasePage listeners
-            console_log = getattr(page, '_console_messages', None)
+            console_log = getattr(page, 'captured_console_messages', None)
             if console_log:
                 allure.attach('\n\n'.join(console_log), name='console_log',
                               attachment_type=allure.attachment_type.TEXT)

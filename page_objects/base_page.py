@@ -346,22 +346,22 @@ class BasePage:
     # Network/console events are collected via listeners, so capture starts
     # when the first page object is created
     def _start_log_capture(self):
-        if hasattr(self.page, '_network_events'):
+        if hasattr(self.page, 'captured_network_events'):
             return
-        self.page._network_events = []
-        self.page._console_messages = []
-        self.page.on('request', lambda r: self.page._network_events.append(
+        self.page.captured_network_events = []
+        self.page.captured_console_messages = []
+        self.page.on('request', lambda r: self.page.captured_network_events.append(
             {'type': 'request', 'url': r.url, 'method': r.method, 'time': time.time()}))
-        self.page.on('response', lambda r: self.page._network_events.append(
+        self.page.on('response', lambda r: self.page.captured_network_events.append(
             {'type': 'response', 'url': r.url, 'status': r.status, 'time': time.time()}))
-        self.page.on('console', lambda m: self.page._console_messages.append(f'{m.type}: {m.text}'))
+        self.page.on('console', lambda m: self.page.captured_console_messages.append(f'{m.type}: {m.text}'))
 
     def get_network_logs(self, event_type: str = 'request', seconds: int = 10) -> List[dict]:
-        events = [e for e in self.page._network_events if e['type'] == event_type]
+        events = [e for e in self.page.captured_network_events if e['type'] == event_type]
         if event_type == 'request':
             cutoff = datetime.now() - timedelta(seconds=seconds)
             events = [e for e in events if datetime.fromtimestamp(e['time']) > cutoff]
         return events
 
     def get_console_log(self) -> str:
-        return '; \n'.join(self.page._console_messages)
+        return '; \n'.join(self.page.captured_console_messages)
