@@ -24,14 +24,13 @@ class TcbPage(BasePage):
     def check_telephone_input(self):
         return self.is_element_visible(TcbLocators.INPUT_TEL)
 
-    def login_with_phone(self, phone_number: str, confirmation_wait_sec: int = 60):
+    def login_with_phone(self, phone_number: str):
         # Masked input ('(---) --- -- --'), so type digits instead of fill()
         self.type_without_clearing(phone_number, TcbLocators.INPUT_TEL)
         self.click(TcbLocators.LOGIN_NEXT_BTN)
-        # Manual step: enter the SMS code in the opened browser window (run
-        # headed). Instead of a blind sleep, wait until the logged-in state
-        # ("Мій кабінет" button) appears
-        self.wait_until_element_is_visible(TcbLocators.MY_CABINET_BTN, timeout=confirmation_wait_sec)
+        # The SMS code screen must appear; the code itself is entered manually
+        # in the browser window while the next action waits for the logged-in state
+        self.wait_until_element_is_visible(TcbLocators.OTP_INPUT)
 
     def confirm_sms_code(self, code: str):
         """Fill the 4 one-digit SMS inputs, if the code is known programmatically"""
@@ -39,7 +38,12 @@ class TcbPage(BasePage):
         for index, digit in enumerate(code):
             self.page.locator(self._selector(TcbLocators.OTP_INPUT)).nth(index).fill(digit)
 
-    def go_to_user_menu_item(self, menu_item: str):
+    def go_to_user_menu_item(self, menu_item: str, timeout: int = 60):
+        # The login modal auto-closes once the SMS code is confirmed — that is
+        # the "logged in" signal; the manual code entry happens during this wait.
+        # The menu items themselves live hidden in the avatar dropdown
+        self.wait_until_element_is_hidden(TcbLocators.LOGIN_MODAL, timeout=timeout)
+        self.click(TcbLocators.LOGGED_IN_AVATAR)
         self.click(self.get_parametrized_locator(TcbLocators.BUTTON_BY_NAME, [menu_item]))
 
     def open_tab(self, tab_name: str):

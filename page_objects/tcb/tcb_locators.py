@@ -4,7 +4,11 @@ class TcbLocators:
     MENU_BTN = 'header >> text=Меню'
     CONTACT_LINK = 'nav a[href="/contacts/"]'
     CONTACT_PAGE_TITLE = 'h1:has-text("Контакти"), h2:has-text("Контакти")'
+    # Logged out: avatar opens the login modal; logged in the header renders a
+    # different component whose button toggles the user dropdown
     AVATAR_ICON = 'button.user-button__login'
+    LOGGED_IN_AVATAR = '.user-wrapper_button'
+    LOGIN_MODAL = '.modal-wrapper'
     # Login modal
     INPUT_TEL = 'role=textbox[name="Телефон *"]'
     LOGIN_NEXT_BTN = 'role=button[name="Далі"]'

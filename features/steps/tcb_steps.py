@@ -33,7 +33,7 @@ def check_login_modal_opened(context):
     assert context.tcb_page.check_telephone_input()
 
 
-@when('Put in login telephone input field my number and wait 10 sec')
+@when('Put in my number and wait for SMS code screen')
 def put_in_phone_number(context):
     phone = os.getenv('TCB_PHONE')
     assert phone, 'Phone number is not set: add TCB_PHONE to the .env file or pass it as an env var'
