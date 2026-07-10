@@ -2,10 +2,15 @@ import os
 import re
 
 import allure
+from dotenv import load_dotenv
 
 from base_definitions import ROOT_DIR
 from lib.driver_wrapper import Driver
 from lib.utilities import Utilities
+
+# Local secrets (e.g. TCB_PHONE) live in the git-ignored .env file;
+# explicitly set env vars still take precedence
+load_dotenv()
 
 TRACES_DIR = f'{ROOT_DIR}/traces'
 

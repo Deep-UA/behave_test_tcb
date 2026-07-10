@@ -6,3 +6,4 @@ py
 pylint
 PyYaml
 playwright
+python-dotenv

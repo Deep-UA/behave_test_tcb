@@ -2,7 +2,6 @@
 # static analysis flags them as not-callable — a known false positive
 # pylint: disable=not-callable
 import os
-import time
 
 from behave import given, then, when
 
@@ -31,15 +30,13 @@ def click_to_avatar_icon(context):
 
 @then('Check if login modal opened and has telephone input field')
 def check_login_modal_opened(context):
-    time.sleep(3)
     assert context.tcb_page.check_telephone_input()
 
 
 @when('Put in login telephone input field my number and wait 10 sec')
 def put_in_phone_number(context):
     phone = os.getenv('TCB_PHONE')
-    assert phone, ('Phone number is not set. Run with TCB_PHONE env var, '
-                   'e.g.: TCB_PHONE=0671234567 behave features/tcb_login_by_phone.feature')
+    assert phone, 'Phone number is not set: add TCB_PHONE to the .env file or pass it as an env var'
     context.tcb_page.login_with_phone(phone)
 
 
