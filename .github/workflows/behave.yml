@@ -35,3 +35,45 @@ jobs:
         name: playwright-traces-${{ matrix.browser }}
         path: traces/
         if-no-files-found: ignore
+    - name: Upload allure results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: allure-results-${{ matrix.browser }}
+        path: allure-results/
+        if-no-files-found: ignore
+
+  allure-report:
+    # Publish the Allure report (chromium run) to GitHub Pages:
+    # https://deep-ua.github.io/behave_test_tcb/
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Download allure results
+      uses: actions/download-artifact@v4
+      with:
+        name: allure-results-chromium
+        path: allure-results
+    - name: Get report history from gh-pages
+      uses: actions/checkout@v4
+      continue-on-error: true  # the branch does not exist before the first publish
+      with:
+        ref: gh-pages
+        path: gh-pages
+    - name: Build report with history
+      uses: simple-elf/allure-report-action@v1.12
+      with:
+        allure_results: allure-results
+        gh_pages: gh-pages
+        allure_report: allure-report
+        allure_history: allure-history
+        keep_reports: 20
+    - name: Publish to gh-pages
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_branch: gh-pages
+        publish_dir: allure-history
