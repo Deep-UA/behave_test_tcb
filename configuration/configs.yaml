@@ -20,7 +20,7 @@ browser_settings: {
 
 general: {
   project: 'UI_tests',
-  git_path: 'https://github.com/Goraved/Typhon-web-UI',
+  git_path: 'https://github.com/Deep-UA/behave_test_tcb',
   bug: 'https://test.jira.com/browse/',
   video_folder_path: '/videos',
   link_type_test_case: 'TEST CASE',
