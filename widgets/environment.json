@@ -1,0 +1,1 @@
+[{"values":[""],"name":"Environment"},{"values":["CHROMIUM"],"name":"Browser"},{"values":["149.0.7827.55"],"name":"CHROMIUM_VERSION"},{"values":["https://github.com/Deep-UA/behave_test_tcb"],"name":"Git"},{"values":["#18~24.04.1-Ubuntu SMP Thu May 28 16:39:11 UTC 2026"],"name":"OS_VERSION"},{"values":["1.61.0"],"name":"PLAYWRIGHT_VERSION"},{"values":["None"],"name":"HEADLESS"}]
