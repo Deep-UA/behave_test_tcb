@@ -2,7 +2,7 @@
 if [[ ! -f requirements.txt ]]; then
     cd ..
 fi
-source venv/bin/activate
+source .venv/bin/activate
 
 _now=$(date +%Y-%m-%d_%H:%M:%S)
 dir=$(pwd)

@@ -8,3 +8,4 @@ traces/
 .playwright-mcp/
 .env
 .DS_Store
+allure-report/
