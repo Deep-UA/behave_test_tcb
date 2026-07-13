@@ -42,3 +42,4 @@ def after_scenario(context, scenario):
 def after_all(context):
     Utilities.fix_properties(context.driver.browser)
     context.driver.stop()
+    Utilities.generate_allure_report()

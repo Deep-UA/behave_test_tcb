@@ -1,4 +1,7 @@
+import glob
 import os
+import shutil
+import subprocess
 import time
 from importlib.metadata import version
 
@@ -34,6 +37,21 @@ class Utilities:
                               attachment_type=allure.attachment_type.TEXT)
         except PlaywrightError:
             pass  # Page/browser already closed
+
+    @staticmethod
+    def generate_allure_report():
+        """Regenerate allure-report after the run and feed its history back into
+        allure-results so the Trend widget accumulates a point per run.
+        Skipped in CI and when the allure CLI is not installed."""
+        if os.getenv('GITHUB_RUN') or not shutil.which('allure'):
+            return
+        results_dir = f'{ROOT_DIR}/allure-results'
+        report_dir = f'{ROOT_DIR}/allure-report'
+        subprocess.run(['allure', 'generate', results_dir, '-o', report_dir, '--clean'],
+                       check=False, capture_output=True)
+        os.makedirs(f'{results_dir}/history', exist_ok=True)
+        for history_file in glob.glob(f'{report_dir}/history/*.json'):
+            shutil.copy(history_file, f'{results_dir}/history/')
 
     @staticmethod
     def fix_properties(browser_instance: Browser):
