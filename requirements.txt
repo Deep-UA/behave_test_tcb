@@ -7,3 +7,4 @@ pylint
 PyYaml
 playwright
 python-dotenv
+requests

@@ -4,7 +4,8 @@ environments: {
 }
 
 urls: {
-  main_ui_url: 'https://tcb.com.ua'
+  main_ui_url: 'https://tcb.com.ua',
+  main_api_url: 'https://tcb.com.ua/api'
 }
 
 timeout_sec: 15

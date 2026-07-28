@@ -21,11 +21,16 @@ def before_all(context):
 
 
 def before_scenario(context, scenario):
+    # @api scenarios hit the backend directly and never touch the browser
+    if 'api' in scenario.tags:
+        return
     # @mobile tag runs the scenario in an emulated mobile device context
     context.page = context.driver.new_page(mobile='mobile' in scenario.tags)
 
 
 def after_scenario(context, scenario):
+    if 'api' in scenario.tags:
+        return
     trace_path = None
     if scenario.status in ('failed', 'error'):
         Utilities.get_screenshot(context.page)

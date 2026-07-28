@@ -25,6 +25,7 @@ with open(f'{os.path.dirname(os.path.abspath(__file__))}/configs.yaml') as CONFI
 
     # Environment settings
     MAIN_UI_URL = get_value('main_ui_url', URLS)
+    MAIN_API_URL = get_value('main_api_url', URLS)
 
     PROJECT = get_value('project', GENERAL)
     LINK_TYPE_TEST_CASE = get_value('link_type_test_case', GENERAL)
