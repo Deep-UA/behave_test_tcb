@@ -27,6 +27,7 @@ jobs:
         BROWSER: ${{ matrix.browser }}
       run: |
         # tcb_login_by_phone.feature is excluded: it needs manual SMS-code entry
+        # tcb_api.feature runs once in the api-test job below, not per-browser
         behave features/tcb_contact.feature features/tcb_login_modal_check.feature
     - name: Upload traces on failure
       if: failure()
@@ -43,19 +44,54 @@ jobs:
         path: allure-results/
         if-no-files-found: ignore
 
+  api-test:
+    # @api scenarios never touch the browser, so this runs once instead of
+    # being tripled across the UI job's browser matrix
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Install Playwright browser
+      # before_all still launches a browser unconditionally even though
+      # @api scenarios don't use one; installed here so that doesn't fail
+      run: playwright install --with-deps chromium
+    - name: Test with behave
+      env:
+        GITHUB_RUN: 'True'
+      run: behave features/tcb_api.feature
+    - name: Upload allure results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: allure-results-api
+        path: allure-results/
+        if-no-files-found: ignore
+
   allure-report:
-    # Publish the Allure report (chromium run) to GitHub Pages:
+    # Publish the Allure report (chromium + api runs) to GitHub Pages:
     # https://deep-ua.github.io/behave_test_tcb/
-    needs: test
+    needs: [test, api-test]
     if: always()
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-    - name: Download allure results
+    - name: Download allure results (chromium)
       uses: actions/download-artifact@v4
       with:
         name: allure-results-chromium
+        path: allure-results
+    - name: Download allure results (api)
+      uses: actions/download-artifact@v4
+      with:
+        name: allure-results-api
         path: allure-results
     - name: Get report history from gh-pages
       uses: actions/checkout@v4
