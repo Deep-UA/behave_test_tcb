@@ -21,15 +21,17 @@ def before_all(context):
 
 
 def before_scenario(context, scenario):
-    # @api scenarios hit the backend directly and never touch the browser
-    if 'api' in scenario.tags:
+    # @api scenarios hit the backend directly and never touch the browser.
+    # effective_tags includes tags inherited from the Feature, not just the
+    # scenario's own tags (scenario.tags would miss a Feature-level @api).
+    if 'api' in scenario.effective_tags:
         return
     # @mobile tag runs the scenario in an emulated mobile device context
-    context.page = context.driver.new_page(mobile='mobile' in scenario.tags)
+    context.page = context.driver.new_page(mobile='mobile' in scenario.effective_tags)
 
 
 def after_scenario(context, scenario):
-    if 'api' in scenario.tags:
+    if 'api' in scenario.effective_tags:
         return
     trace_path = None
     if scenario.status in ('failed', 'error'):
